@@ -9,7 +9,7 @@ node {
   -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_1512:/root/.m2""") {
 
       stage('Configuring things up & checking out the geOrchestra repository') {
-        git url:'https://github.com/georchestra/georchestra.git', branch:"master" // fsck it c2c-geospatial
+        git url:'https://github.com/georchestra/georchestra.git', branch:"master"
         sh "git config --global user.email 'psc@georchestra.org'"
         sh "git config --global user.name 'geOrchestra PSC'"
         sh "git submodule update --init --recursive"

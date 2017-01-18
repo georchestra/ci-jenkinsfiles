@@ -1,0 +1,35 @@
+node {
+
+  stage('docker pull the geOrchestra builder image') {
+      sh 'docker pull georchestra/jenkins-builder'
+  }
+
+  withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
+  -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
+  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2""") {
+
+    stage('Preparation (git checkout & launching docker)') {
+      git url:'https://github.com/georchestra/cadastrapp.git'
+      sh "git submodule update --init --recursive"
+      sh 'service docker start'
+    } // stage
+
+    stage('build') {
+      sh """mvn  clean install"""
+    } //stage
+
+    stage('Create and Publish the debian package') {
+        sh """mvn package deb:package deb:deploy                                         \
+              -pl  cadastrapp -PdebianPackage -DskipTests                                \
+              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian  \
+              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf \
+              -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
+    } // stage
+
+    stage('Results') {
+      junit '**/target/surefire-reports/TEST-*.xml'
+      archive 'target/*.war,target/*.zip'
+    } // stage
+  } //withDockerContainer
+} // node
+

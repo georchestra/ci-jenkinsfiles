@@ -1,0 +1,45 @@
+node {
+  // Pulling the docker builder image
+  stage('docker pull the geOrchestra builder image') {
+    sh 'docker pull georchestra/jenkins-builder'
+  }
+  // blocks to be executed in parallel
+  stage('spawning builder for debian packages') {
+    withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
+  -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
+  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2""") {
+
+      stage('Configuring things up & checking out the geOrchestra repository') {
+        git url:'https://github.com/georchestra/georchestra.git', branch:"master" // fsck it c2c-geospatial
+
+        sh "git config --global user.email 'psc@georchestra.org'"
+        sh "git config --global user.name 'geOrchestra PSC'"
+        sh "git submodule update --init --recursive"
+        sh 'service docker start'
+      }
+      stage('build mandatory modules') {
+        sh """mvn  -Dmaven.test.failure.ignore clean install --non-recursive"""
+        sh """mvn clean install -pl config -Dmaven.javadoc.failOnError=false"""
+        sh """mvn clean install -pl commons,epsg-extension,ogc-server-statistics \
+              -Dmaven.javadoc.failOnError=false""" // javadoc.failOnError required for java > 7
+      }
+      stage('build / refresh geoserver & geonetwork artifacts') {
+        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
+        sh """mvn clean install -pl geoserver"""
+      }
+      stage("build debian packages") {
+        sh """mvn package deb:package deb:deploy                                                                                                                                   \
+              -pl catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
+              -PdebianPackage -DskipTests                                                                                                                                          \
+              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                            \
+              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                           \
+              -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
+      } // stage
+    } // withDocker
+  } // stage
+  stage('Spawning ansible remotely onto sdi.g.o') {
+      sshagent(["ansible-trigger-key"]) {
+          sh "ssh -oStrictHostKeyChecking=no root@172.16.42.42"
+      } // sshagent
+  } // stage
+} // node

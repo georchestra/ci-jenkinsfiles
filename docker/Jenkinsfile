@@ -46,33 +46,31 @@ node {
       }
       stage('build / publish geOr images') {
         sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl atlas,extractorapp,security-proxy,mapfishapp"""
-        // There is a 10GB limit in docker containers, we need to free some space
-        // between images generation ...
-        sh """docker rmi georchestra/atlas:latest georchestra/extractorapp:latest georchestra/security-proxy:latest georchestra/mapfishapp:latest"""
         sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl header,ldapadmin,analytics,catalogapp,downloadform -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
-        sh """docker rmi georchestra/header:latest georchestra/ldapadmin:latest georchestra/analytics:latest georchestra/catalogapp:latest georchestra/downloadform:latest"""
 
         // then build the other images
         sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
-        sh """docker rmi georchestra/cas:latest"""
         sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
-        sh """docker rmi georchestra/geoserver:latest"""
         sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
-        sh """docker rmi georchestra/geonetwork:3-latest"""
         sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
-        sh """docker rmi georchestra/geowebcache:latest"""
       } // stage
       stage('build postgresql geOr image') {
-        sh """cd ${WORKSPACE}/postgresql                     \
-              docker build -t georchestra/database:latest .  \
-              docker push georchestra/database:latest        \
-              cd ${WORKSPACE}"""
+        sh """cd ${WORKSPACE}/postgresql                    && \
+              docker pull postgres:9.4                      && \
+              docker build -t georchestra/database:latest . && \
+              docker push georchestra/database:latest"""
       } //stage
       stage("build ldap geOr image") {
-        sh """cd ${WORKSPACE}/ldap                            \
-              docker build -t georchestra/ldap:latest .       \
-              docker push georchestra/ldap:latest             \
-              cd ${WORKSPACE}"""
+        sh """cd ${WORKSPACE}/ldap                          && \
+              docker pull dinkel/openldap                   && \
+              docker build -t georchestra/ldap:latest .     && \
+              docker push georchestra/ldap:latest"""
+      } // stage
+      stage("build ssh_data geOr image") {
+        sh """cd ${WORKSPACE}/docker/ssh_data               &&  \
+              docker pull debian:jessie                     &&  \
+              docker build -t georchestra/ssh_data:latest . &&  \
+              docker push georchestra/ssh_data:latest"""
       } // stage
     } // withDocker
   } // stage

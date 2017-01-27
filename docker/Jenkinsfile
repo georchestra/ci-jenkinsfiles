@@ -31,28 +31,27 @@ node {
                 </servers>
               </settings>""".replaceAll("USERNAME", env.USERNAME).replaceAll("PASSWORD", env.PASSWORD)
             sh "echo '${configXmlStr}' > /config.xml"
-            sh "docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
         }
       }
       stage('build mandatory modules') {
-        sh """mvn  -Dmaven.test.failure.ignore clean install --non-recursive"""
-        sh """mvn clean install -pl config -Dmaven.javadoc.failOnError=false"""
-        sh """mvn clean install -pl commons,epsg-extension,ogc-server-statistics \
-              -Dmaven.javadoc.failOnError=false"""
+        sh """mvn clean install -fn --non-recursive"""
+        sh """mvn clean install -fn -pl config"""
+        sh """mvn clean install -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -pl geoserver"""
+        sh """mvn clean install -f geonetwork/pom.xml -fn"""
+        sh """mvn clean install -pl geoserver -fn"""
       }
       stage('build / publish geOr images') {
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl atlas,extractorapp,security-proxy,mapfishapp"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl header,ldapadmin,analytics,catalogapp,downloadform -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl atlas,extractorapp,security-proxy,mapfishapp"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl header,ldapadmin,analytics,catalogapp,downloadform \
+                -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
 
         // then build the other images
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -fae -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
       } // stage
       stage('build postgresql geOr image') {
         sh """cd ${WORKSPACE}/postgresql                    && \
@@ -71,6 +70,10 @@ node {
               docker pull debian:jessie                     &&  \
               docker build -t georchestra/ssh_data:latest . &&  \
               docker push georchestra/ssh_data:latest"""
+      } // stage
+      stage("Saving tests results") {
+        // this requires the Junit Jenkins module
+        junit '**/target/surefire-reports/TEST-*.xml'
       } // stage
     } // withDocker
   } // stage

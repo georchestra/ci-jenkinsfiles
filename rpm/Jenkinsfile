@@ -16,22 +16,21 @@ node {
         sh 'service docker start'
       } // stage
       stage('build mandatory modules') {
-        sh """mvn  -Dmaven.test.failure.ignore clean install --non-recursive"""
-        sh """mvn clean install -pl config -Dmaven.javadoc.failOnError=false"""
-        sh """mvn clean install -pl commons,epsg-extension,ogc-server-statistics \
-              -Dmaven.javadoc.failOnError=false"""
+        sh """mvn clean install -fn --non-recursive"""
+        sh """mvn clean install -fn -pl config"""
+        sh """mvn clean install -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('prepare RPM configuration') {
         sh "echo '%_gpg_name F10EAFF4' > ~/.rpmmacros"
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -pl geoserver"""
+        sh """mvn clean install -f geonetwork/pom.xml -fn"""
+        sh """mvn clean install -pl geoserver -fn"""
       }
       stage('build rpm packages') {
         sh """mvn clean package rpm:rpm                                                                                                                                          \
               -pl catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp \
-              -PrpmPackage -DskipTests -Drpm.gpg.key=F10EAFF4"""
+              -PrpmPackage -fn -Drpm.gpg.key=F10EAFF4"""
       } // stage
       stage('publish yum packages') {
         sh """echo "Cleaning up old dependencies (but not geoserver-geofence, managed by another build) ..."
@@ -42,6 +41,10 @@ node {
               createrepo /var/www/packages.georchestra.org/htdocs/yum/master/
               echo "Done."
            """
+      } // stage
+      stage("Saving tests results") {
+        // this requires the Junit Jenkins module
+        junit '**/target/surefire-reports/TEST-*.xml'
       } // stage
     } // withDocker
   } // stage

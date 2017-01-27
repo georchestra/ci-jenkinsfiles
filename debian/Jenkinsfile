@@ -17,22 +17,25 @@ node {
         sh 'service docker start'
       }
       stage('build mandatory modules') {
-        sh """mvn  -Dmaven.test.failure.ignore clean install --non-recursive"""
-        sh """mvn clean install -pl config -Dmaven.javadoc.failOnError=false"""
-        sh """mvn clean install -pl commons,epsg-extension,ogc-server-statistics \
-              -Dmaven.javadoc.failOnError=false""" // javadoc.failOnError required for java > 7
+        sh """mvn clean install -fn --non-recursive"""
+        sh """mvn clean install -pl config -fn"""
+        sh """mvn clean install -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -pl geoserver"""
+        sh """mvn clean install -f geonetwork/pom.xml -fn"""
+        sh """mvn clean install -pl geoserver -fn"""
       }
       stage("build debian packages") {
         sh """mvn package deb:package deb:deploy                                                                                                                                   \
               -pl catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
-              -PdebianPackage -DskipTests                                                                                                                                          \
+              -PdebianPackage -fn                                                                                                                                                  \
               -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                            \
               -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                           \
               -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
+      } // stage
+      stage("Saving tests results") {
+        // this requires the Junit Jenkins module
+        junit '**/target/surefire-reports/TEST-*.xml'
       } // stage
     } // withDocker
   } // stage

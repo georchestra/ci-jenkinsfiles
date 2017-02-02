@@ -33,7 +33,7 @@ node {
       stage("Publishing artifacts") {
         sh "mkdir -p /var/www/packages.georchestra.org/htdocs/wars-master"
         sh "rm -f /var/www/packages.georchestra.org/htdocs/wars-master/*.war"
-        sh "cp **/target/*.war /var/www/packages.georchestra.org/htdocs/wars-master/"
+        sh "cp **/target/*.war geonetwork/web/target/*.war geoserver/webapp/target/*.war /var/www/packages.georchestra.org/htdocs/wars-master/"
       }
       stage("Saving tests results") {
         // this requires the Junit Jenkins module

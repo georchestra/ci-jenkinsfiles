@@ -4,7 +4,7 @@ node {
     sh 'docker pull georchestra/jenkins-builder'
   }
   // blocks to be executed in parallel
-  stage('spawning builder for debian packages') {
+  stage('spawning builder') {
     withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
   -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2""") {
@@ -25,12 +25,13 @@ node {
         sh """mvn clean install -f geonetwork/pom.xml -fn"""
         sh """mvn clean install -pl geoserver -fn"""
       }
-      stage("build debian packages") {
+      stage("build artifacts") {
         sh """mvn package                                                                                                                                                                \
               -pl atlas,catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
               -fn"""
       } // stage
-      stage("Saving artifacts") {
+      stage("Publishing artifacts") {
+        sh "mkdir -p /var/www/packages.georchestra.org/htdocs/wars-master"
         sh "rm -f /var/www/packages.georchestra.org/htdocs/wars-master/*.war"
         sh "cp **/target/*.war /var/www/packages.georchestra.org/htdocs/wars-master/"
       }

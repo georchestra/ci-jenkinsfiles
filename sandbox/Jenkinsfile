@@ -28,7 +28,7 @@ node {
       stage("build debian packages") {
         sh """mvn package deb:package deb:deploy                                                                                                                                         \
               -pl atlas,catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
-              -PdebianPackage -fn                                                                                                                                                        \
+              -PdebianPackage -DskipTests                                                                                                                                                \
               -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                                  \
               -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                                 \
               -Ddeb.repository.branch=sandbox -Ddeb.package.version='sandbox+\${env.BUILD_NUMBER}'"""

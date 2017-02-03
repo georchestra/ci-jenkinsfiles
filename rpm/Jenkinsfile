@@ -30,7 +30,7 @@ node {
       stage('build rpm packages') {
         sh """mvn clean package rpm:rpm                                                                                                                                          \
               -pl catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp \
-              -PrpmPackage -fn -Drpm.gpg.key=F10EAFF4"""
+              -PrpmPackage -DskipTests -Drpm.gpg.key=F10EAFF4"""
       } // stage
       stage('publish yum packages') {
         sh """echo "Cleaning up old dependencies (but not geoserver-geofence, managed by another build) ..."

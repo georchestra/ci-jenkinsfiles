@@ -39,19 +39,19 @@ node {
         sh """mvn clean install -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -f geonetwork/pom.xml -fn"""
-        sh """mvn clean install -pl geoserver -fn"""
+        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
+        sh """mvn clean install -pl geoserver -DskipTests"""
       }
       stage('build / publish geOr images') {
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl atlas,extractorapp,security-proxy,mapfishapp"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl header,ldapadmin,analytics,catalogapp,downloadform \
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl atlas,extractorapp,security-proxy,mapfishapp"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl header,ldapadmin,analytics,catalogapp,downloadform \
                 -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
 
         // then build the other images
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -fn -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
+        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
       } // stage
       stage('build postgresql geOr image') {
         sh """cd ${WORKSPACE}/postgresql                    && \

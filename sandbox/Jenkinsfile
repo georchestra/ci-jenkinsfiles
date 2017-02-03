@@ -31,7 +31,7 @@ node {
               -PdebianPackage -DskipTests                                                                                                                                                \
               -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                                  \
               -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                                 \
-              -Ddeb.repository.branch=sandbox -Ddeb.package.version='sandbox+\${env.BUILD_NUMBER}'"""
+              -Ddeb.repository.branch=sandbox -Ddeb.package.version='\${project.version}+sandbox\${env.BUILD_NUMBER}'"""
       } // stage
       stage("Saving tests results") {
         // this requires the Junit Jenkins module

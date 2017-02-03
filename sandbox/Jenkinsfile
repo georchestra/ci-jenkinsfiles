@@ -26,7 +26,7 @@ node {
         sh """mvn clean install -pl geoserver -fn"""
       }
       stage("build debian packages") {
-        sh """mvn package deb:package deb:deploy                                                                                                                                         \
+        sh """mvn clean package deb:package deb:deploy                                                                                                                                   \
               -pl atlas,catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
               -PdebianPackage -DskipTests                                                                                                                                                \
               -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                                  \

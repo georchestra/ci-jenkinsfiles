@@ -6,10 +6,11 @@ node {
 
   withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
-  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2""") {
+  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2_repo""") {
 
     stage('Preparation (git checkout & launching docker)') {
       git url:'https://github.com/georchestra/cadastrapp.git'
+      sh "cp -r /root/.m2_repo /root/.m2"
       sh "git submodule update --init --recursive"
       sh 'service docker start'
     } // stage

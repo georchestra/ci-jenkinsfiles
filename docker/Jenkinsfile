@@ -32,6 +32,7 @@ node {
                 </servers>
               </settings>""".replaceAll("USERNAME", env.USERNAME).replaceAll("PASSWORD", env.PASSWORD)
             sh "echo '${configXmlStr}' > /config.xml"
+            sh "export DOCKER_API_VERSION=1.23 && docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
         }
       }
       stage('build mandatory modules') {
@@ -56,20 +57,23 @@ node {
       } // stage
       stage('build postgresql geOr image') {
         sh """cd ${WORKSPACE}/postgresql                    && \
+              export DOCKER_API_VERSION=1.23                && \
               docker pull postgres:9.4                      && \
               docker build -t georchestra/database:latest . && \
               docker push georchestra/database:latest"""
       } //stage
       stage("build ldap geOr image") {
         sh """cd ${WORKSPACE}/ldap                          && \
+              export DOCKER_API_VERSION=1.23                && \
               docker pull dinkel/openldap                   && \
               docker build -t georchestra/ldap:latest .     && \
               docker push georchestra/ldap:latest"""
       } // stage
       stage("build ssh_data geOr image") {
-        sh """cd ${WORKSPACE}/docker/ssh_data               &&  \
-              docker pull debian:jessie                     &&  \
-              docker build -t georchestra/ssh_data:latest . &&  \
+        sh """cd ${WORKSPACE}/docker/ssh_data               && \
+              export DOCKER_API_VERSION=1.23                && \
+              docker pull debian:jessie                     && \
+              docker build -t georchestra/ssh_data:latest . && \
               docker push georchestra/ssh_data:latest"""
       } // stage
       stage("Saving tests results") {

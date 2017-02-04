@@ -9,7 +9,7 @@ node {
   -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2_repo""") {
       stage('Checking out the geOrchestra repository') {
         git url:'https://github.com/georchestra/georchestra.git', branch:"master"
-        sh "cp -r /root/.m2_repo /root/.m2"
+        sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2/repository && cp -r /root/.m2_repo/repository /root/.m2/repository"
         sh "git submodule update --init --recursive"
         sh 'service docker start'
       }

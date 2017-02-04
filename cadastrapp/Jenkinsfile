@@ -10,7 +10,7 @@ node {
 
     stage('Preparation (git checkout & launching docker)') {
       git url:'https://github.com/georchestra/cadastrapp.git'
-      sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2/repository && cp -r /root/.m2_repo/repository /root/.m2/repository"
+      sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2 && cp -r /root/.m2_repo/repository /root/.m2/"
       sh "git submodule update --init --recursive"
       sh 'service docker start'
     } // stage

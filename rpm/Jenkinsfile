@@ -10,7 +10,7 @@ node {
 
       stage('Configuring things up & checking out the geOrchestra repository') {
         git url:'https://github.com/georchestra/georchestra.git', branch:"master"
-        sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2/repository && cp -r /root/.m2_repo/repository /root/.m2/repository"
+        sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2 && cp -r /root/.m2_repo/repository /root/.m2/"
         sh "git config --global user.email 'psc@georchestra.org'"
         sh "git config --global user.name 'geOrchestra PSC'"
         sh "git submodule update --init --recursive"

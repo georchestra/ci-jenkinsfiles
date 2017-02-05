@@ -25,8 +25,8 @@ node {
         sh "echo '%_gpg_name F10EAFF4' > ~/.rpmmacros"
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -f geonetwork/pom.xml -fn"""
-        sh """mvn clean install -pl geoserver -fn"""
+        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
+        sh """mvn clean install -pl geoserver -DskipTests"""
       }
       stage('build rpm packages') {
         sh """mvn clean package rpm:rpm                                                                                                                                          \

@@ -41,11 +41,10 @@ node {
     } // withDocker
   } // stage
 
-// TODO might deserve another script, but deactivating for now
+  stage('Spawning ansible remotely onto sdi.g.o') {
+      sshagent(["ansible-sandbox-trigger-key"]) {
+          sh "ssh -oStrictHostKeyChecking=no root@172.16.42.42"
+      } // sshagent
+  } // stage
 
-//  stage('Spawning ansible remotely onto sdi.g.o') {
-//      sshagent(["ansible-trigger-key"]) {
-//          sh "ssh -oStrictHostKeyChecking=no root@172.16.42.42"
-//      } // sshagent
-//  } // stage
 } // node

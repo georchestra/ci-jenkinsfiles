@@ -27,11 +27,11 @@ node {
         sh """mvn clean install -pl geoserver -DskipTests"""
       }
       stage("build debian packages") {
-        sh """mvn clean package deb:package deb:deploy                                                                                                                             \
-              -pl catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
-              -PdebianPackage -fn                                                                                                                                                  \
-              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                            \
-              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                           \
+        sh """mvn clean package deb:package deb:deploy                                                                                                                                   \
+              -pl atlas,catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
+              -PdebianPackage -DskipTests                                                                                                                                                \
+              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                                  \
+              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                                 \
               -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
       } // stage
       stage("Saving tests results") {

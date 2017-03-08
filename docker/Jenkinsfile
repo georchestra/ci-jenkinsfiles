@@ -42,7 +42,7 @@ node {
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
         sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -pl geoserver -DskipTests"""
+        sh """mvn clean install -f geoserver/pom.xml -DskipTests"""
       }
       stage('build / publish geOr images') {
         sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl atlas,extractorapp,security-proxy,mapfishapp"""

@@ -24,7 +24,7 @@ node {
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
         sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -pl geoserver -DskipTests"""
+        sh """mvn clean install -f geoserver/pom.xml -DskipTests"""
       }
       stage("build artifacts") {
         sh """mvn package                                                                                                                                                                \

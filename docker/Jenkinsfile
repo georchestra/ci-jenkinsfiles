@@ -17,6 +17,8 @@ node {
       stage('Checking out the geOrchestra repository') {
         git url:'https://github.com/georchestra/georchestra.git', branch:"master"
         sh "git submodule update --init --recursive"
+        // This is specific to the geOrchestra build env and is probably not needed
+        sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
         sh 'service docker start'
       }
       stage('configure georchestra docker-hub account / login on docker-hub') {

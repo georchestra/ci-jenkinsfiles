@@ -16,12 +16,14 @@ node {
 
     stage('Preparation (git checkout & launching docker)') {
       git url:'https://github.com/georchestra/cadastrapp.git'
+      // This is specific to the geOrchestra build env and is probably not needed
+      sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
       sh "git submodule update --init --recursive"
       sh 'service docker start'
     } // stage
 
     stage('build') {
-      sh """mvn  clean install"""
+      sh """mvn -B -Dmaven.repo.local=./.m2_repo clean install"""
     } //stage
 
     stage('Create and Publish the debian package') {

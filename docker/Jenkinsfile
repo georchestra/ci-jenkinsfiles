@@ -6,10 +6,9 @@ node {
   stage('build') {
     withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
-  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2_repo""") {
+  -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
       stage('Checking out the geOrchestra repository') {
         git url:'https://github.com/georchestra/georchestra.git', branch:"master"
-          sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2 && cp -r /root/.m2_repo/repository /root/.m2/"
         sh "git submodule update --init --recursive"
         sh 'service docker start'
       }
@@ -36,24 +35,24 @@ node {
         }
       }
       stage('build mandatory modules') {
-        sh """mvn clean install -fn --non-recursive"""
-        sh """mvn clean install -fn -pl config"""
-        sh """mvn clean install -fn -pl commons,epsg-extension,ogc-server-statistics"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn --non-recursive"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl config"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -f geoserver/pom.xml -DskipTests"""
+        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
+        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
       }
       stage('build / publish geOr images') {
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl atlas,extractorapp,security-proxy,mapfishapp"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl header,ldapadmin,analytics,catalogapp,downloadform \
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl atlas,extractorapp,security-proxy,mapfishapp"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl header,ldapadmin,analytics,catalogapp,downloadform \
                 -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
 
         // then build the other images
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
-        sh """mvn clean package docker:build docker:push -s /config.xml -Pdocker -DskipTests -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
       } // stage
       stage('build postgresql geOr image') {
         sh """cd ${WORKSPACE}/postgresql                    && \
@@ -75,10 +74,6 @@ node {
               docker pull debian:jessie                     && \
               docker build -t georchestra/ssh_data:latest . && \
               docker push georchestra/ssh_data:latest"""
-      } // stage
-      stage("Saving tests results") {
-        // this requires the Junit Jenkins module
-        junit '**/target/surefire-reports/TEST-*.xml'
       } // stage
     } // withDocker
   } // stage

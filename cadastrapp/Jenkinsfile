@@ -6,11 +6,10 @@ node {
 
   withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
-  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2_repo""") {
+  -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 
     stage('Preparation (git checkout & launching docker)') {
       git url:'https://github.com/georchestra/cadastrapp.git'
-      sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2 && cp -r /root/.m2_repo/repository /root/.m2/"
       sh "git submodule update --init --recursive"
       sh 'service docker start'
     } // stage
@@ -20,16 +19,11 @@ node {
     } //stage
 
     stage('Create and Publish the debian package') {
-        sh """mvn package deb:package deb:deploy                                         \
+        sh """mvn package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo        \
               -pl  cadastrapp -PdebianPackage -DskipTests                                \
               -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian  \
               -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf \
               -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
-    } // stage
-
-    stage('Results') {
-      junit '**/target/surefire-reports/TEST-*.xml'
-      archive 'target/*.war,target/*.zip'
     } // stage
   } //withDockerContainer
 } // node

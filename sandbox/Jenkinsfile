@@ -7,36 +7,31 @@ node {
   stage('spawning builder for debian packages') {
     withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
-  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2_repo""") {
+  -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 
       stage('Configuring things up & checking out the geOrchestra repository') {
         git url:'https://github.com/georchestra/georchestra.git', branch:"sandbox"
-        sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2 && cp -r /root/.m2_repo/repository /root/.m2/"
         sh "git config --global user.email 'psc@georchestra.org'"
         sh "git config --global user.name 'geOrchestra PSC'"
         sh "git submodule update --init --recursive"
         sh 'service docker start'
       }
       stage('build mandatory modules') {
-        sh """mvn clean install -fn --non-recursive"""
-        sh """mvn clean install -pl config -fn"""
-        sh """mvn clean install -fn -pl commons,epsg-extension,ogc-server-statistics"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn --non-recursive"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl config -fn"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -f geoserver/pom.xml -DskipTests"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
       }
       stage("build debian packages") {
-        sh """mvn clean package deb:package deb:deploy                                                                                                                                   \
+        sh """mvn clean package deb:package deb:deploy-B -Dmaven.repo.local=./.m2_repo                                                                                                   \
               -pl atlas,catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
               -PdebianPackage -DskipTests                                                                                                                                                \
               -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                                  \
               -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                                 \
               -Ddeb.repository.branch=sandbox -Ddeb.package.version='\${project.version}+sandbox\${env.BUILD_NUMBER}'"""
-      } // stage
-      stage("Saving tests results") {
-        // this requires the Junit Jenkins module
-        junit '**/target/surefire-reports/TEST-*.xml'
       } // stage
     } // withDocker
   } // stage

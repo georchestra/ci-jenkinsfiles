@@ -63,26 +63,9 @@ node {
         sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
         sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
       } // stage
-      stage('build postgresql geOr image') {
-        sh """cd ${WORKSPACE}/postgresql                    && \
-              export DOCKER_API_VERSION=1.23                && \
-              docker pull postgres:9.4                      && \
-              docker build -t georchestra/database:latest . && \
-              docker push georchestra/database:latest"""
-      } //stage
-      stage("build ldap geOr image") {
-        sh """cd ${WORKSPACE}/ldap                          && \
-              export DOCKER_API_VERSION=1.23                && \
-              docker pull dinkel/openldap                   && \
-              docker build -t georchestra/ldap:latest .     && \
-              docker push georchestra/ldap:latest"""
-      } // stage
-      stage("build ssh_data geOr image") {
-        sh """cd ${WORKSPACE}/docker/ssh_data               && \
-              export DOCKER_API_VERSION=1.23                && \
-              docker pull debian:jessie                     && \
-              docker build -t georchestra/ssh_data:latest . && \
-              docker push georchestra/ssh_data:latest"""
+      stage("Saving tests results") {
+        // this requires the Junit Jenkins module
+        junit '**/target/surefire-reports/TEST-*.xml'
       } // stage
     } // withDocker
   } // stage

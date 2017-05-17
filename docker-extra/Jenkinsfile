@@ -1,0 +1,61 @@
+node {
+  // Pulling the docker builder image
+  stage('docker pull the geOrchestra builder image') {
+    sh 'docker pull georchestra/jenkins-builder'
+  }
+  stage('build') {
+    withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
+  -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
+  -v /home/jenkins-tools/gnupg:/root/.gnupg -v /home/jenkins-tools/m2_master:/root/.m2_repo""") {
+      stage('Checking out the geOrchestra repository') {
+        git url:'https://github.com/georchestra/georchestra.git', branch:"master"
+          sh "rm -rf /root/.m2/repository && mkdir -p /root/.m2 && cp -r /root/.m2_repo/repository /root/.m2/"
+        sh "git submodule update --init --recursive"
+        sh 'service docker start'
+      }
+      stage('configure georchestra docker-hub account / login on docker-hub') {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'geor-docker-hub',
+              usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+            def configXmlStr = """<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+                <servers>
+                  <server>
+                    <id>docker-hub</id>
+                    <username>USERNAME</username>
+                    <password>PASSWORD</password>
+                    <configuration>
+                      <email>psc@georchestra.org</email>
+                    </configuration>
+                  </server>
+                </servers>
+              </settings>""".replaceAll("USERNAME", env.USERNAME).replaceAll("PASSWORD", env.PASSWORD)
+            sh "echo '${configXmlStr}' > /config.xml"
+            sh "export DOCKER_API_VERSION=1.23 && docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
+        }
+      }
+      stage('build postgresql geOr image') {
+        sh """cd ${WORKSPACE}/postgresql                    && \
+              export DOCKER_API_VERSION=1.23                && \
+              docker pull postgres:9.4                      && \
+              docker build -t georchestra/database:latest . && \
+              docker push georchestra/database:latest"""
+      } //stage
+      stage("build ldap geOr image") {
+        sh """cd ${WORKSPACE}/ldap                          && \
+              export DOCKER_API_VERSION=1.23                && \
+              docker pull dinkel/openldap                   && \
+              docker build -t georchestra/ldap:latest .     && \
+              docker push georchestra/ldap:latest"""
+      } // stage
+      stage("build ssh_data geOr image") {
+        sh """cd ${WORKSPACE}/docker/ssh_data               && \
+              export DOCKER_API_VERSION=1.23                && \
+              docker pull debian:jessie                     && \
+              docker build -t georchestra/ssh_data:latest . && \
+              docker push georchestra/ssh_data:latest"""
+      } // stage
+    } // withDocker
+  } // stage
+} // node

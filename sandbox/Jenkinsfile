@@ -35,7 +35,7 @@ node {
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
       }
       stage("build debian packages") {
-        sh """mvn clean package deb:package deb:deploy-B -Dmaven.repo.local=./.m2_repo                                                                                                   \
+        sh """mvn clean package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo                                                                                                  \
               -pl atlas,catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
               -PdebianPackage -DskipTests                                                                                                                                                \
               -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                                  \

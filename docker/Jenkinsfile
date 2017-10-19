@@ -67,6 +67,11 @@ node {
         // this requires the Junit Jenkins module
         junit '**/target/surefire-reports/TEST-*.xml'
       } // stage
+      stage('Spawning ansible remotely onto sdi.g.o') {
+        sshagent(["ansible-docker-trigger-key"]) {
+          sh "ssh -oStrictHostKeyChecking=no root@172.16.42.42"
+        } // sshagent
+      } // stage
     } // withDocker
   } // stage
 } // node

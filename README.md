@@ -5,7 +5,7 @@ official geOrchestra CI.
 
 # Requirements
 
-A Jenkins 2.x is mandatoryi. More details on the setup later on.
+A Jenkins 2.x is mandatory. More details on the setup later on.
 
 
 

@@ -7,12 +7,12 @@ node {
   }
 
   // Pulling the docker builder image
-  stage('docker pull the geOrchestra builder image') {
-    sh 'docker pull georchestra/jenkins-builder'
+  stage('docker pull the builder image') {
+    sh 'docker pull georchestra/jenkins-builder:jdk8'
   }
   // blocks to be executed in parallel
-  stage('spawning builder for debian packages') {
-    withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
+  stage('spawning builder') {
+    withDockerContainer(image: 'georchestra/jenkins-builder:jdk8', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
   -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 
@@ -45,7 +45,7 @@ node {
     } // withDocker
   } // stage
 
-  stage('Spawning ansible remotely onto sdi.g.o') {
+  stage('Spawning ansible to deploy sandbox') {
       sshagent(["ansible-sandbox-trigger-key"]) {
           sh "ssh -oStrictHostKeyChecking=no root@172.16.42.42"
       } // sshagent

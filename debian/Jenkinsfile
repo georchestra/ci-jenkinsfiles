@@ -8,7 +8,7 @@ node {
 
   // Pulling the docker builder image
   stage('docker pull the geOrchestra builder image') {
-    sh 'docker pull georchestra/jenkins-builder'
+    sh 'docker pull georchestra/jenkins-builder:jdk8'
   }
   // blocks to be executed in parallel
   stage('spawning builder for debian packages') {

@@ -7,7 +7,7 @@ node {
   }
 
   stage('docker pull the geOrchestra builder image') {
-      sh 'docker pull georchestra/jenkins-builder'
+      sh 'docker pull georchestra/jenkins-builder:jdk8'
   }
 
   withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \

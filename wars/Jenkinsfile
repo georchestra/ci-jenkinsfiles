@@ -12,7 +12,7 @@ node {
   }
   // blocks to be executed in parallel
   stage('spawning builder') {
-    withDockerContainer(image: 'georchestra/jenkins-builder', args: """--privileged -u 0:0   \
+    withDockerContainer(image: 'georchestra/jenkins-builder:jdk8', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
   -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 

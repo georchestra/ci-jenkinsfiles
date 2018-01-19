@@ -54,7 +54,7 @@ node {
       }
       stage('build / publish geOr images') {
         sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl atlas,extractorapp,security-proxy,mapfishapp"""
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl header,ldapadmin,analytics,catalogapp,downloadform \
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl header,ldapadmin,analytics,downloadform \
                 -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
 
         // then build the other images

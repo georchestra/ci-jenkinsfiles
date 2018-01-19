@@ -36,7 +36,7 @@ node {
       }
       stage("build artifacts") {
         sh """mvn package -B -Dmaven.repo.local=./.m2_repo                                                                                                                               \
-              -pl atlas,catalogapp,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp   \
+              -pl atlas,cas-server-webapp,downloadform,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp              \
               -DskipTests"""
       } // stage
       stage("Publishing artifacts") {

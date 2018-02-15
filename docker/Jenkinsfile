@@ -60,7 +60,7 @@ node {
         // then build the other images
         sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
         sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:3-latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:341-latest"""
         sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DskipTests -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
       } // stage
       stage("Saving tests results") {

@@ -39,7 +39,7 @@ node {
       }
       stage('build rpm packages') {
         sh """mvn clean package rpm:rpm                                                                                                                                          \
-              -pl cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,ldapadmin,geonetwork/web,geowebcache-webapp                         \
+              -pl cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp                           \
               -PrpmPackage -DskipTests -Drpm.gpg.key=F10EAFF4"""
       } // stage
       stage('publish yum packages') {

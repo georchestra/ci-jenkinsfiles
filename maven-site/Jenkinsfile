@@ -16,6 +16,9 @@ node {
       stage('Firing up mvn site') {
         sh """mvn site"""
       } // stage
+      stage('Publish generated HTML site') {
+       publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: '', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: ''])
+      } // stage
     } // withDocker
   } // stage
 } // node

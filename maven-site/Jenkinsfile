@@ -5,7 +5,7 @@ node {
   }
   // blocks to be executed in parallel
   stage('spawning builder') {
-    withDockerContainer(image: 'georchestra/jenkins-builder:jdk8') {
+    withDockerContainer(image: 'georchestra/jenkins-builder:jdk8', args: '--privileged -u 0:0') {
       stage('Configuring things up & checking out the geOrchestra repository') {
         git url:'https://github.com/georchestra/georchestra.git', branch:"master"
           sh "git submodule update --init --recursive"

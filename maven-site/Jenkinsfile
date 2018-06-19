@@ -13,6 +13,11 @@ node {
           sh """mkdir -p ~/.m2"""
           sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
       } // stage
+      stage('build mandatory modules') {
+        sh """mvn clean install -B -fn --non-recursive"""
+        sh """mvn clean install -B -pl config -fn"""
+        sh """mvn clean install -B -fn -pl commons,epsg-extension,ogc-server-statistics"""
+      }
       stage('Firing up mvn site') {
         sh """mvn site"""
       } // stage

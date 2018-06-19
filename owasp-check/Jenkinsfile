@@ -1,0 +1,28 @@
+node {
+  // Pulling the docker builder image
+  stage('docker pull the geOrchestra builder image') {
+    sh 'docker pull georchestra/jenkins-builder:jdk8'
+  }
+  // blocks to be executed in parallel
+  stage('spawning builder for debian packages') {
+    withDockerContainer(image: 'georchestra/jenkins-builder:jdk8', args: """--privileged -u 0:0   \
+  -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
+  -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
+
+      stage('Configuring things up & checking out the geOrchestra repository') {
+        git url:'https://github.com/georchestra/georchestra.git', branch:"master"
+        sh "git config --global user.email 'psc@georchestra.org'"
+        sh "git config --global user.name 'geOrchestra PSC'"
+        sh "git submodule update --init --recursive"
+        // This is specific to the geOrchestra build env and is probably not needed
+        sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
+        sh 'service docker start'
+        sh """mkdir -p ~/.m2"""
+        sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
+      }
+      stage('Firing up dependency:check') {
+        sh """mvn dependency:check"""
+      }
+    } // withDocker
+  } // stage
+} // node

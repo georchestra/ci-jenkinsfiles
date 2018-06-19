@@ -21,7 +21,7 @@ node {
         sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
       }
       stage('Firing up dependency:check') {
-        sh """mvn dependency:check"""
+        sh """mvn dependency-check:check"""
       }
     } // withDocker
   } // stage

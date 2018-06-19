@@ -1,0 +1,21 @@
+node {
+  // Pulling the docker builder image
+  stage('docker pull the geOrchestra builder image') {
+    sh 'docker pull georchestra/jenkins-builder:jdk8'
+  }
+  // blocks to be executed in parallel
+  stage('spawning builder') {
+    withDockerContainer(image: 'georchestra/jenkins-builder:jdk8') {
+      stage('Configuring things up & checking out the geOrchestra repository') {
+        git url:'https://github.com/georchestra/georchestra.git', branch:"master"
+          sh "git submodule update --init --recursive"
+          sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
+          sh """mkdir -p ~/.m2"""
+          sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
+      } // stage
+      stage('Firing up mvn site') {
+        sh """mvn site"""
+      } // stage
+    } // withDocker
+  } // stage
+} // node

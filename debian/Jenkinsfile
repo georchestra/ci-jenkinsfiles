@@ -33,8 +33,8 @@ node {
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
+        sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
+        sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
       }
       stage("build debian packages") {
         sh """mvn clean package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo                                                                                                  \

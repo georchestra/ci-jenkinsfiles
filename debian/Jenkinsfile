@@ -23,6 +23,8 @@ node {
         sh "git submodule update --init --recursive"
         // This is specific to the geOrchestra build env and is probably not needed
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
+        sh 'mkdir -p ~/.m2/'
+        sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
         sh 'service docker start'
       }
       stage('build mandatory modules') {

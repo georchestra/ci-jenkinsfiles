@@ -30,15 +30,15 @@ node {
       stage('build mandatory modules') {
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn --non-recursive"""
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl config -fn"""
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl commons,epsg-extension,ogc-server-statistics"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -DskipTests -pl commons,epsg-extension,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
       }
       stage("build artifacts") {
-        sh """mvn package -B -Dmaven.repo.local=./.m2_repo                                                                                                                               \
-              -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp                           \
+        sh """mvn package -B -Dmaven.repo.local=./.m2_repo                                                                                                    \
+              -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp  \
               -DskipTests"""
       } // stage
       stage("Publishing artifacts") {

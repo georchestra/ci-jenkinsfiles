@@ -20,8 +20,23 @@ node {
         sh """mkdir -p ~/.m2"""
         sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
       }
+      stage('Building mandatory modules') {
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn --non-recursive"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl config -fn"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl commons,epsg-extension,ogc-server-statistics"""
+      }
       stage('Firing up dependency:check') {
-        sh """mvn dependency-check:check"""
+        sh """mvn -B -Dmaven.repo.local=./.m2_repo dependency-check:check"""
+      }
+      stage('Saving OWASP dependency check results') {
+        publishHTML([ allowMissing: false,
+                      alwaysLinkToLastBuild: false,
+                      includes: '**/target/dependency-check-report.html',
+                      keepAll: false,
+                      reportDir: '',
+                      reportFiles: '',
+                      reportName: 'OWASP dependency check report',
+                      reportTitles: ''])
       }
     } // withDocker
   } // stage

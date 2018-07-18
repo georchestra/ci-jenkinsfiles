@@ -25,8 +25,8 @@ node {
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl config -fn"""
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl commons,epsg-extension,ogc-server-statistics"""
       }
-      stage('Firing up dependency:check') {
-        sh """mvn -B -Dmaven.repo.local=./.m2_repo dependency-check:check"""
+      stage('Firing up dependency-check:check') {
+        sh """mvn -B -Dmaven.repo.local=./.m2_repo dependency-check:check -pl security-proxy,analytics,atlas,cas-server-webapp,commons,config,console,epsg-extension,extractorapp,geotools,geowebcache-webapp,header,mapfishapp,ogc-server-statistics -fn"""
       }
       stage('Saving OWASP dependency check results') {
         publishHTML([ allowMissing: false,

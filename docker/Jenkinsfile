@@ -63,6 +63,9 @@ node {
       }
 
       stage('build / refresh geoserver & geonetwork artifacts') {
+        // first time without tests
+        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests """
+        // second time with tests
         sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml """
         sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml  """
       }

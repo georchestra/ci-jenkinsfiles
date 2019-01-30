@@ -29,8 +29,6 @@ node {
                 ])
         // This is specific to the geOrchestra build env and is probably not needed
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
-        sh 'mkdir -p ~/.m2/'
-        sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
         sh 'service docker start'
       }
 
@@ -41,6 +39,13 @@ node {
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
               http://maven.apache.org/xsd/settings-1.0.0.xsd">
+                <mirrors>
+                  <mirror>
+                    <id>artifactory</id>
+                    <mirrorOf>*</mirrorOf>
+                    <url>https://packages.georchestra.org/artifactory/maven</url>
+                  </mirror>
+                </mirrors>
                 <servers>
                   <server>
                     <id>docker-hub</id>
@@ -58,16 +63,16 @@ node {
       }
 
       stage('build mandatory modules') {
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo --non-recursive"""
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl commons,epsg-extension,ogc-server-statistics"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -s /config.xml --non-recursive"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -s /config.xml -pl commons,epsg-extension,ogc-server-statistics"""
       }
 
       stage('build / refresh geoserver & geonetwork artifacts') {
         // first time without tests
-        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests """
+        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -f geonetwork/pom.xml -DskipTests """
         // second time with tests
-        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml """
-        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml  """
+        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -f geonetwork/pom.xml """
+        sh """mvn clean install  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -f geoserver/pom.xml  """
       }
 
       stage('build / publish geOr images') {

@@ -64,7 +64,7 @@ node {
 
       stage('build mandatory modules') {
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -s /config.xml --non-recursive"""
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -s /config.xml -pl commons,epsg-extension,ogc-server-statistics"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -s /config.xml -pl commons,ogc-server-statistics"""
       }
 
       stage('build / refresh geoserver & geonetwork artifacts') {

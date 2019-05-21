@@ -76,15 +76,16 @@ node {
       }
 
       stage('build / publish geOr images') {
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DdockerImageTags=latest -pl atlas,extractorapp,security-proxy,mapfishapp"""
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DdockerImageTags=latest -pl header,console,analytics \
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker  -pl atlas,extractorapp,security-proxy,mapfishapp \
+                -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker  -pl header,console,analytics \
                 -DdockerImageName='georchestra/\${project.artifactId}:latest'"""
 
         // then build the other images
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DdockerImageTags=latest -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DdockerImageTags=latest -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DdockerImageTags=latest -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:341-latest"""
-        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -DdockerImageTags=latest -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -pl cas-server-webapp -DdockerImageName=georchestra/cas:latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -pl geoserver/webapp -DdockerImageName=georchestra/geoserver:latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -pl geonetwork/web -DdockerImageName=georchestra/geonetwork:latest"""
+        sh """mvn clean package docker:build docker:push  -B -Dmaven.repo.local=./.m2_repo -s /config.xml -Pdocker -pl geowebcache-webapp -DdockerImageName=georchestra/geowebcache:latest"""
       } // stage
 
       stage("Saving tests results") {

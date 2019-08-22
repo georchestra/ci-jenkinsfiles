@@ -8,7 +8,7 @@ node {
 
   // Pulling the docker builder image
   stage('docker pull the geOrchestra builder image') {
-    sh 'docker pull georchestra/jenkins-builder:jdk8'
+    sh 'docker pull georchestra/jenkins-builder:sid-jdk-8'
   }
   // blocks to be executed in parallel
   stage('spawning builder for debian packages') {
@@ -21,27 +21,26 @@ node {
         sh "git config --global user.email 'psc@georchestra.org'"
         sh "git config --global user.name 'geOrchestra PSC'"
         sh "git submodule update --init --recursive"
-        // This is specific to the geOrchestra build env and is probably not needed
+        // This is specific to the geOrchestra build env and is probably not needed elsewhere
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
         sh 'mkdir -p ~/.m2/'
         sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
         sh 'service docker start'
       }
       stage('build mandatory modules') {
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn --non-recursive"""
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl config -fn"""
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -pl commons,ogc-server-statistics"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo --non-recursive"""
+        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl commons,ogc-server-statistics"""
       }
       stage('build / refresh geoserver & geonetwork artifacts') {
         sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
         sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
       }
       stage("build debian packages") {
-        sh """mvn clean package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo                                                                                                  \
-              -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp                             \
-              -PdebianPackage -DskipTests                                                                                                                                                \
-              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                                                  \
-              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                                                 \
+        sh """mvn clean package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo                                                                      \
+              -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp \
+              -PdebianPackage                                                                                                                                \
+              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                      \
+              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                     \
               -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
       } // stage
     } // withDocker

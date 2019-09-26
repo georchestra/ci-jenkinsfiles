@@ -43,7 +43,7 @@ node {
       } // stage
       stage("Publishing artifacts") {
         withCredentials([string(credentialsId: 'github-token', variable: 'ghToken')]) {
-          sh "mvn deploy -Dregistry=https://maven.pkg.github.com/georchestra -Dtoken=${ghToken}"
+          sh "mvn deploy -Dregistry=https://maven.pkg.github.com/georchestra -DaltDeploymentRepository='releaseRepository::default::https://maven.pkg.github.com/georchestra'  -Dtoken=${ghToken}"
         }
         sh "mkdir -p /var/www/packages.georchestra.org/htdocs/wars-master"
         sh "rm -f /var/www/packages.georchestra.org/htdocs/wars-master/*.war"

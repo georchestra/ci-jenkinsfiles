@@ -9,7 +9,6 @@ node {
   // Pulling the docker builder image
   stage('Preparing build') {
     sh 'docker pull georchestra/jenkins-builder:sid-jdk-8'
-    sh 'chown -R jenkins:jenkins .git'
   }
   // blocks to be executed in parallel
   stage('spawning builder') {

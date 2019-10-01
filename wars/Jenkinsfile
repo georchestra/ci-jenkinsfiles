@@ -9,6 +9,19 @@ node {
   // Pulling the docker builder image
   stage('Preparing build') {
     sh 'docker pull georchestra/jenkins-builder:sid-jdk-8'
+    checkout([ $class: 'GitSCM',
+               branches: [[name: "*/master"]],
+               doGenerateSubmoduleConfigurations: false,
+               extensions: [[ $class: 'SubmoduleOption',
+                              disableSubmodules: false,
+                              parentCredentials: false,
+                              recursiveSubmodules: true,
+                              reference: '',
+                              trackingSubmodules: false]],
+               submoduleCfg: [],
+               userRemoteConfigs: [[ url: 'https://github.com/georchestra/georchestra.git' ]]
+            ])
+
   }
   // blocks to be executed in parallel
   stage('spawning builder') {
@@ -16,11 +29,9 @@ node {
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
   -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 
-      stage('Configuring things up & checking out the geOrchestra repository') {
-        git url:'https://github.com/georchestra/georchestra.git', branch:"master"
+      stage('Configuring things up') {
         sh "git config --global user.email 'psc@georchestra.org'"
         sh "git config --global user.name 'geOrchestra PSC'"
-        sh "git submodule update --init --recursive"
         // This is specific to the geOrchestra build env and is probably not needed
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
         sh 'mkdir -p ~/.m2/'

@@ -12,8 +12,9 @@ node {
   }
   // blocks to be executed in parallel
   stage('spawning builder for debian packages') {
-    withDockerContainer(image: 'georchestra/jenkins-builder:jdk8', args: """--privileged -u 0:0   \
+    withDockerContainer(image: 'georchestra/jenkins-builder:sid-jdk-8', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
+  -v /var/run/docker.sock:/var/run/docker.sock \
   -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 
       stage('Configuring things up & checking out the geOrchestra repository') {
@@ -25,7 +26,6 @@ node {
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
         sh 'mkdir -p ~/.m2/'
         sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
-        sh 'service docker start'
       }
       stage('build mandatory modules') {
         sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo --non-recursive"""

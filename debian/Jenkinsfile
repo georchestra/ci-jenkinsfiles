@@ -18,17 +18,20 @@ node {
   -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 
       stage('Configuring things up & checking out the geOrchestra repository') {
-        checkout([ $class: 'GitSCM',
-               branches: [[name: "*/master"]],
-               doGenerateSubmoduleConfigurations: false,
-               extensions: [[ $class: 'SubmoduleOption',
-                              disableSubmodules: false,
-                              parentCredentials: false,
-                              recursiveSubmodules: true,
-                              reference: '',
-                              trackingSubmodules: false]],
-               submoduleCfg: []
+
+        checkout([$class: 'GitSCM',
+          branches: [[name: '*/master']],
+          doGenerateSubmoduleConfigurations: false,
+          extensions: [[ $class: 'SubmoduleOption',
+            disableSubmodules: false,
+            parentCredentials: false,
+            recursiveSubmodules: true,
+            reference: '',
+            trackingSubmodules: false]],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'https://github.com/georchestra/georchestra.git']]
         ])
+
         // This is specific to the geOrchestra build env and is probably not needed elsewhere
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
         sh 'mkdir -p ~/.m2/'

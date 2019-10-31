@@ -35,6 +35,8 @@ node {
         // This is specific to the geOrchestra build env and is probably not needed elsewhere
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
         sh 'mkdir -p ~/.m2/'
+        sh "git config --global user.email 'psc@georchestra.org'"
+        sh "git config --global user.name 'geOrchestra PSC'"
         sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
       }
       stage('build mandatory modules') {

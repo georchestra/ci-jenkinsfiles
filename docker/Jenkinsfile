@@ -1,10 +1,4 @@
 node {
-  stage('login onto docker-hub') {
-    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'geor-docker-hub',
-        usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-          sh "export DOCKER_API_VERSION=1.23 && docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
-    }
-  }
 
   // Pulling the docker builder image
   stage('docker pull the geOrchestra builder image') {
@@ -58,7 +52,7 @@ node {
                 </servers>
               </settings>""".replaceAll("USERNAME", env.USERNAME).replaceAll("PASSWORD", env.PASSWORD)
             sh "echo '${configXmlStr}' > /config.xml"
-            sh "export DOCKER_API_VERSION=1.23 && docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
+            sh "docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
         }
       }
 

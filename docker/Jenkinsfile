@@ -13,6 +13,7 @@ node {
   stage('build') {
     withDockerContainer(image: 'georchestra/jenkins-builder:sid-jdk-8', args: """--privileged -u 0:0   \
   -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
+  -v /var/run/docker.sock:/var/run/docker.sock \
   -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
       stage('Checking out the geOrchestra repository') {
         checkout([ $class: 'GitSCM',
@@ -29,7 +30,6 @@ node {
                 ])
         // This is specific to the geOrchestra build env and is probably not needed
         sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
-        sh 'service docker start'
       }
 
       stage('configure georchestra docker-hub account / login on docker-hub') {

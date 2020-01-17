@@ -56,7 +56,7 @@ node {
       stage("Publishing artifacts") {
         sh "mkdir -p /var/www/packages.georchestra.org/htdocs/wars-master"
         sh "rm -f /var/www/packages.georchestra.org/htdocs/wars-master/*.war"
-        sh "cp **/target/*.war geonetwork/web/target/*.war geoserver/webapp/target/*.war /var/www/packages.georchestra.org/htdocs/wars-master/"
+        sh "cp /usr/src/georchestra/**/target/*.war /usr/src/georchestra/geonetwork/web/target/*.war /usr/src/georchestra/geoserver/webapp/target/*.war /var/www/packages.georchestra.org/htdocs/wars-master/"
       }
     } // withDocker
   } // stage

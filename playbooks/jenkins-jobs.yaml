@@ -1,0 +1,33 @@
+- hosts: jenkins
+  tasks:
+    - name: Setting up a 'cadastrapp' job
+      jenkins_job:
+        name: "cadastrapp"
+        config: "{{ lookup('template', '../cadastrapp/cadastrapp.xml') }}"
+        user: "{{ jenkins_admin_username }}"
+        password: "{{ jenkins_admin_password }}"
+        url: "{{ jenkins_url }}"
+
+    - name: Setting up a 'debian' job
+      jenkins_job:
+        name: "debian"
+        config: "{{ lookup('template', '../debian/debian.xml') }}"
+        user: "{{ jenkins_admin_username }}"
+        password: "{{ jenkins_admin_password }}"
+        url: "{{ jenkins_url }}"
+
+    - name: Setting up a 'wars' job
+      jenkins_job:
+        name: "wars"
+        config: "{{ lookup('template', '../wars/wars.xml') }}"
+        user: "{{ jenkins_admin_username }}"
+        password: "{{ jenkins_admin_password }}"
+        url: "{{ jenkins_url }}"
+
+    - name: Setting up a 'docker-garbage-collection' job
+      jenkins_job:
+        name: "docker-garbage-collection"
+        config: "{{ lookup('template', '../docker-garbage-collection/docker-garbage-collection.xml') }}"
+        user: "{{ jenkins_admin_username }}"
+        password: "{{ jenkins_admin_password }}"
+        url: "{{ jenkins_url }}"

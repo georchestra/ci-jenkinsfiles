@@ -1,0 +1,9 @@
+all:
+  vars:
+    jenkins_url: http://my.jenkins.instance.org/jenkins
+    jenkins_admin_username: root
+    jenkins_admin_password: password
+  hosts:
+    jenkins:
+      ansible_connection: local
+      ansible_python_interpreter: /absolute/path/to/your/venv/bin/python

@@ -1,12 +1,5 @@
 node {
-  stage('login onto docker-hub') {
-    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'geor-docker-hub',
-        usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-          sh "export DOCKER_API_VERSION=1.23 && docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
-    }
-  }
 
-  // Pulling the docker builder image
   stage('Preparing build') {
     sh 'docker pull georchestra/jenkins-builder:sid-jdk-8'
     checkout([ $class: 'GitSCM',
@@ -23,41 +16,24 @@ node {
             ])
 
   }
-  // blocks to be executed in parallel
-  stage('spawning builder') {
-    withDockerContainer(image: 'georchestra/jenkins-builder:sid-jdk-8', args: """--privileged -u 0:0   \
-  -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
-  -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
 
-      stage('Configuring things up') {
-        sh "git config --global user.email 'psc@georchestra.org'"
-        sh "git config --global user.name 'geOrchestra PSC'"
-        // This is specific to the geOrchestra build env and is probably not needed
-        sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
-        sh 'mkdir -p ~/.m2/'
-        sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
-        sh 'service docker start'
-        sh "cp -r /home/jenkins/jobs/georchestra-pipelines/jobs/wars/workspace /usr/src/georchestra"
-      }
-      stage('build mandatory modules') {
-        sh """cd /usr/src/georchestra && mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn --non-recursive"""
-        sh """cd /usr/src/georchestra && mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl config -fn"""
-        sh """cd /usr/src/georchestra && mvn clean install -B -Dmaven.repo.local=./.m2_repo -fn -DskipTests -pl commons,ogc-server-statistics"""
-      }
-      stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """cd /usr/src/georchestra && mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
-        sh """cd /usr/src/georchestra && mvn clean install -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
-      }
-      stage("build artifacts") {
-        sh """cd /usr/src/georchestra && mvn package -B -Dmaven.repo.local=./.m2_repo                                                                                                    \
-              -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp  \
-              -DskipTests"""
-      } // stage
-      stage("Publishing artifacts") {
-        sh "mkdir -p /var/www/packages.georchestra.org/htdocs/wars-master"
-        sh "rm -f /var/www/packages.georchestra.org/htdocs/wars-master/*.war"
-        sh "cp /usr/src/georchestra/**/target/*.war /usr/src/georchestra/geonetwork/web/target/*.war /usr/src/georchestra/geoserver/webapp/target/*.war /var/www/packages.georchestra.org/htdocs/wars-master/"
-      }
-    } // withDocker
+  stage('build mandatory modules') {
+    sh """mvn clean install -B --non-recursive"""
+    sh """mvn clean install -B -pl commons,ogc-server-statistics"""
+  }
+  stage('build / refresh geoserver & geonetwork artifacts') {
+    sh """mvn clean install -B -f geonetwork/pom.xml"""
+    sh """mvn clean install -B -f geoserver/pom.xml"""
+  }
+  stage("build artifacts") {
+    sh """mvn package -B \
+          -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp"""
+  } // stage
+  stage("Publishing artifacts") {
+    sh "mkdir -p /var/www/packages.georchestra.org/htdocs/wars-master"
+    sh "rm -f /var/www/packages.georchestra.org/htdocs/wars-master/*.war"
+    sh "cp **/target/*.war geonetwork/web/target/*.war geoserver/webapp/target/*.war /var/www/packages.georchestra.org/htdocs/wars-master/"
+
+    // TODO publish on artifactory instead
   } // stage
 } // node

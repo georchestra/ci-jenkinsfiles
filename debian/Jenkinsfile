@@ -1,63 +1,38 @@
 node {
-  stage('login onto docker-hub') {
-    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'geor-docker-hub',
-        usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-          sh "export DOCKER_API_VERSION=1.23 && docker login -u ${env.USERNAME} -p '${env.PASSWORD}'"
-    }
+
+  stage('Configuring things up & checking out the geOrchestra repository') {
+
+    checkout([$class: 'GitSCM',
+      branches: [[name: '*/master']],
+      doGenerateSubmoduleConfigurations: false,
+      extensions: [[ $class: 'SubmoduleOption',
+        disableSubmodules: false,
+        parentCredentials: false,
+        recursiveSubmodules: true,
+        reference: '',
+        trackingSubmodules: false]],
+      submoduleCfg: [],
+      userRemoteConfigs: [[url: 'https://github.com/georchestra/georchestra.git']]
+    ])
   }
-
-  // Pulling the docker builder image
-  stage('docker pull the geOrchestra builder image') {
-    sh 'docker pull georchestra/jenkins-builder:sid-jdk-8'
+  stage('build mandatory modules') {
+    sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo --non-recursive"""
+    sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl commons,ogc-server-statistics"""
   }
-  // blocks to be executed in parallel
-  stage('spawning builder for debian packages') {
-    withDockerContainer(image: 'georchestra/jenkins-builder:sid-jdk-8', args: """--privileged -u 0:0   \
-  -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
-
-      stage('Configuring things up & checking out the geOrchestra repository') {
-
-        checkout([$class: 'GitSCM',
-          branches: [[name: '*/master']],
-          doGenerateSubmoduleConfigurations: false,
-          extensions: [[ $class: 'SubmoduleOption',
-            disableSubmodules: false,
-            parentCredentials: false,
-            recursiveSubmodules: true,
-            reference: '',
-            trackingSubmodules: false]],
-          submoduleCfg: [],
-          userRemoteConfigs: [[url: 'https://github.com/georchestra/georchestra.git']]
-        ])
-
-        // This is specific to the geOrchestra build env and is probably not needed elsewhere
-        sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
-        sh 'mkdir -p ~/.m2/'
-        sh "git config --global user.email 'psc@georchestra.org'"
-        sh "git config --global user.name 'geOrchestra PSC'"
-        sh """echo '<settings><mirrors><mirror><id>artifactory</id><mirrorOf>*</mirrorOf><url>https://packages.georchestra.org/artifactory/maven</url></mirror></mirrors></settings>' > ~/.m2/settings.xml"""
-      }
-      stage('build mandatory modules') {
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo --non-recursive"""
-        sh """mvn clean install -B -Dmaven.repo.local=./.m2_repo -pl commons,ogc-server-statistics"""
-      }
-      stage('build / refresh geoserver & geonetwork artifacts') {
-        sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml -DskipTests"""
-        sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml -DskipTests"""
-      }
-      stage("build debian packages") {
-        sh """mvn clean package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo                                                                      \
-              -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp \
-              -PdebianPackage                                                                                                                                \
-              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                      \
-              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                     \
-              -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
-      } // stage
-    } // withDocker
+  stage('build / refresh geoserver & geonetwork artifacts') {
+    sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geonetwork/pom.xml"""
+    sh """mvn clean install -U -B -Dmaven.repo.local=./.m2_repo -f geoserver/pom.xml"""
+  }
+  stage("build debian packages") {
+    sh """mvn clean package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo                                                                      \
+          -pl atlas,cas-server-webapp,security-proxy,header,mapfishapp,extractorapp,analytics,geoserver/webapp,console,geonetwork/web,geowebcache-webapp \
+          -PdebianPackage                                                                                                                                \
+          -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian                                                                      \
+          -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf                                                                     \
+          -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
   } // stage
-  stage('Spawning ansible remotely onto sdi.g.o') {
+
+  stage('deploying onto sdi.g.o') {
       sshagent(["ansible-trigger-key"]) {
           sh "ssh -oStrictHostKeyChecking=no root@172.16.42.42"
       } // sshagent

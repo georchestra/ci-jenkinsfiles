@@ -6,33 +6,36 @@ node {
     }
   }
 
-  stage('docker pull the geOrchestra builder image') {
-      sh 'docker pull georchestra/jenkins-builder:jdk8'
-  }
+  stage('Preparation (git checkout & launching docker)') {
+      checkout([
+                  $class: 'GitSCM',
+                  branches: [[ name: '*/master' ]],
+                  doGenerateSubmoduleConfigurations: false,
+                  extensions: [[
+                    $class: 'SubmoduleOption',
+                    disableSubmodules: false,
+                    parentCredentials: false,
+                    recursiveSubmodules: true,
+                    reference: '',
+                    trackingSubmodules: false
+                  ]],
+                  submoduleCfg: [],
+                  userRemoteConfigs: [[
+                    url: 'https://github.com/georchestra/cadastrapp.git'
+                  ]]
+                ])
+  } // stage
 
-  withDockerContainer(image: 'georchestra/jenkins-builder:sid-jdk-8', args: """--privileged -u 0:0   \
-  -v /var/www/packages.georchestra.org/htdocs:/var/www/packages.georchestra.org/htdocs \
-  -v /home/jenkins-tools/gnupg:/root/.gnupg""") {
+  stage('build') {
+    sh """mvn -B clean install"""
+  } //stage
 
-    stage('Preparation (git checkout & launching docker)') {
-      git url:'https://github.com/georchestra/cadastrapp.git'
-      // This is specific to the geOrchestra build env and is probably not needed
-      sh 'echo "172.16.42.42 packages.georchestra.org" >> /etc/hosts'
-      sh "git submodule update --init --recursive"
-      sh 'service docker start'
-    } // stage
+  stage('Create and Publish the debian package') {
+      sh """mvn package deb:package deb:deploy -B                                      \
+            -pl  cadastrapp -PdebianPackage -DskipTests                                \
+            -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian  \
+            -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf \
+            -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
+  } // stage
 
-    stage('build') {
-      sh """mvn -B -Dmaven.repo.local=./.m2_repo clean install"""
-    } //stage
-
-    stage('Create and Publish the debian package') {
-        sh """mvn package deb:package deb:deploy -B -Dmaven.repo.local=./.m2_repo        \
-              -pl  cadastrapp -PdebianPackage -DskipTests                                \
-              -Ddeb.repository.location=/var/www/packages.georchestra.org/htdocs/debian  \
-              -Ddeb.reprepro.config=/var/www/packages.georchestra.org/htdocs/debian/conf \
-              -Ddeb.repository.branch=master -Ddeb.package.version='\${project.version}+\${env.BUILD_NUMBER}'"""
-    } // stage
-  } //withDockerContainer
 } // node
-
